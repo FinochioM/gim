@@ -1,6 +1,7 @@
 {.push raises: [].}
 
 import sdl2
+import opengl
 
 type
   BackendConfig* = object
@@ -17,6 +18,17 @@ type
 var gBackend: Backend
 
 proc isRunning*(): bool {.inline.} = gBackend.running
+
+proc initGl*() {.raises: [].} =
+  {.cast(raises: []).}:
+    loadExtensions()
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+proc clearScreen*(r, g, b, a: float32) {.raises: [].} =
+  {.cast(raises: []).}:
+    glClearColor(r, g, b, a)
+    glClear(GL_COLOR_BUFFER_BIT)
 
 proc init*(cfg: BackendConfig) =
   if sdl2.init(INIT_VIDEO or INIT_JOYSTICK) != SdlSuccess:
@@ -45,6 +57,8 @@ proc init*(cfg: BackendConfig) =
     sdl2.quit()
     gBackend.running = false
     return
+
+  initGl()
 
   gBackend.running  = true
   gBackend.lastTick = getTicks()

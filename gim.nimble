@@ -9,3 +9,4 @@ srcDir = "src"
 # Dependencies
 requires "nim >= 2.0.0"
 requires "sdl2 >= 2.0.0"
+requires "opengl >= 1.2.6"

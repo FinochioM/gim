@@ -2,6 +2,7 @@
 
 import sdl2
 import opengl
+import renderer
 
 type
   BackendConfig* = object
@@ -59,6 +60,7 @@ proc init*(cfg: BackendConfig) =
     return
 
   initGl()
+  renderer.initRenderer(cfg.width.int, cfg.height.int)
 
   gBackend.running  = true
   gBackend.lastTick = getTicks()

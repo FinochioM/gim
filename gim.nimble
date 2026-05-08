@@ -10,3 +10,6 @@ srcDir = "src"
 requires "nim >= 2.0.0"
 requires "sdl2 >= 2.0.0"
 requires "opengl >= 1.2.6"
+
+task docs, "generate gim.doc.nim from src/ exports and ## comments":
+  exec "nim r tools/gendoc.nim"

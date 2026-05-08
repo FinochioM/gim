@@ -1,3 +1,6 @@
+# ------------------------------------
+# Matias Finochio - 2026 - MIT License
+# ------------------------------------
 {.push raises: [].}
 
 import types

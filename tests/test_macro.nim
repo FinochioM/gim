@@ -1,12 +1,21 @@
+# ------------------------------------
+# Matias Finochio - 2026 - MIT License
+# ------------------------------------
 import gim
 
 game "My first game!", 800, 600:
-  scene "Test Scene":
-    onLoad:
-      discard
+  scene "Scene 1":
+    onUpdate(dt):
+      if input.isKeyPressed(keySpace):
+        switchScene("Scene 2")
+    onDraw:
+      backend.clearScreen(0.1f, 0.1f, 0.1f, 1f)
+      renderer.drawRect(Vec2px(x: Pixels(100f), y: Pixels(100f)),Vec2px(x: Pixels(200f), y: Pixels(150f)),Red)
+
+  scene "Scene 2":
     onUpdate(dt):
       if input.isKeyPressed(keyEscape):
-        quit(0)
+        switchScene("Scene 1")
     onDraw:
-      backend.clearScreen(0.15f, 0.15f, 0.2f, 1f)
-      renderer.drawRect(Vec2px(x: Pixels(100f), y: Pixels(100f)),Vec2px(x: Pixels(200f), y: Pixels(150f)),Red)
+      backend.clearScreen(0.15f, 0.15f, 0.15f, 1f)
+      renderer.drawRect(Vec2px(x: Pixels(100f), y: Pixels(100f)),Vec2px(x: Pixels(200f), y: Pixels(150f)),Blue)

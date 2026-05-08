@@ -99,9 +99,23 @@ func rgb8*(r, g, b: uint8): Color {.inline.}
 
 func hex*(v: uint32): Color {.inline.}
 
+func `==`*(a, b: Color): bool {.inline.}
+
 func lerp*(a, b: Color, t: float32): Color {.inline.}
 
 func withAlpha*(c: Color, a: float32): Color {.inline.}
+
+White* = Color(r: 1f, g: 1f, b: 1f, a: 1f)
+
+Black* = Color(r: 0f, g: 0f, b: 0f, a: 1f)
+
+Transparent* = Color(r: 0f, g: 0f, b: 0f, a: 0f)
+
+Red* = Color(r: 1f, g: 0f, b: 0f, a: 1f)
+
+Green* = Color(r: 0f, g: 1f, b: 0f, a: 1f)
+
+Blue* = Color(r: 0f, g: 0f, b: 1f, a: 1f)
 
 
 # ── gamemacro.nim ───────────────────────────────────────
@@ -159,6 +173,8 @@ func center*[T: Scalar](r: Rect2[T]): Vec2[T] {.inline.}
 func contains*[T: Scalar](r: Rect2[T], p: Vec2[T]): bool {.inline.}
 
 func overlaps*[T: Scalar](a, b: Rect2[T]): bool {.inline.}
+
+func `==`*[T: Scalar](a, b: Rect2[T]): bool {.inline.}
 
 Rect2px* = Rect2[Pixels]
 
@@ -254,6 +270,8 @@ func `<`*(a, b: Pixels): bool {.inline.}
 
 func `<=`*(a, b: Pixels): bool {.inline.}
 
+func `==`*(a, b: Pixels): bool {.inline.}
+
 func `+`*(a, b: WorldUnits): WorldUnits {.inline.}
 
 func `-`*(a, b: WorldUnits): WorldUnits {.inline.}
@@ -266,6 +284,12 @@ func `<`*(a, b: WorldUnits): bool {.inline.}
 
 func `<=`*(a, b: WorldUnits): bool {.inline.}
 
+func `==`*(a, b: WorldUnits): bool {.inline.}
+
+DegToRad* = PI.float32 / 180'f32
+
+RadToDeg* = 180'f32 / PI.float32
+
 func toRadians*(d: Degrees): Radians {.inline.}
 
 func toDegrees*(r: Radians): Degrees {.inline.}
@@ -273,6 +297,12 @@ func toDegrees*(r: Radians): Degrees {.inline.}
 func `<`*(a, b: ZLayer): bool {.inline.}
 
 func `<=`*(a, b: ZLayer): bool {.inline.}
+
+func `==`*(a, b: ZLayer): bool {.inline.}
+
+const InvalidEntity*: EntityId = EntityId(0)
+
+func `==`*(a, b: EntityId): bool {.inline.}
 
 func isValid*(id: EntityId): bool {.inline.}
 
@@ -294,6 +324,8 @@ func `-`*[T: Scalar](a, b: Vec2[T]): Vec2[T] {.inline.}
 func `*`*[T: Scalar](a: Vec2[T], s: float32): Vec2[T] {.inline.}
 
 func `/`*[T: Scalar](a: Vec2[T], s: float32): Vec2[T] {.inline.}
+
+func `==`*[T: Scalar](a, b: Vec2[T]): bool {.inline.}
 
 func dot*[T: Scalar](a, b: Vec2[T]): float32 {.inline.}
 

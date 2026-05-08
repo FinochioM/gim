@@ -39,12 +39,14 @@ func normWhitespace(s: string): string =
 
 func isExportedDecl(line: string): bool =
   let s = line.strip()
-  if s.contains("`="):  return false
+  if s.contains("`=destroy") or s.contains("`=copy") or
+      s.contains("`=sink")    or s.contains("`=trace"): return false
   for kw in DeclKeywords:
     if s.startsWith(kw) and '*' in s: return true
 
 func isTypeBlockOpener(line: string): bool =
-  line.strip() == "type"
+  let s = line.strip()
+  s == "type" or s == "const"
 
 func isExportedTypeEntry(line: string): bool =
   let s = line.strip()
@@ -102,6 +104,12 @@ proc parseFile(path: string): Section =
        stripped.startsWith('#') or
        stripped.startsWith("import") or
        stripped.startsWith("export"):
+      inc i
+      continue
+
+    if stripped.startsWith("const ") and '*' in stripped:
+      result.decls.add Decl(docs: pendingDocs, signature: normWhitespace(stripped))
+      pendingDocs = @[]
       inc i
       continue
 

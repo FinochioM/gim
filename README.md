@@ -3,7 +3,7 @@
 A 2D game library for Nim, where Nim's features are the foundation of every design decision.
 
 _You can use the `gim.doc.nim` file as a cheatsheet_ \
-_It might not be fully updated since the library it is under development_ 
+_It might not be fully updated since the library is under development_ 
 
 ## Basic example
 

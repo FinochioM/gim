@@ -3,6 +3,7 @@
 import sdl2
 import opengl
 import renderer
+import input
 
 type
   BackendConfig* = object
@@ -72,11 +73,22 @@ proc shutdown*() =
   gBackend.running = false
 
 proc pollEvents*() =
+  inputBeginFrame()
   var evt = sdl2.defaultEvent
   while sdl2.pollEvent(evt):
     case evt.kind
     of QuitEvent:
       gBackend.running = false
+    of KeyDown:
+      inputHandleKey(evt.key.keysym.scancode, true)
+    of KeyUp:
+      inputHandleKey(evt.key.keysym.scancode, false)
+    of MouseButtonDown:
+      inputHandleMouseButton(evt.button.button, true)
+    of MouseButtonUp:
+      inputHandleMouseButton(evt.button.button, false)
+    of MouseMotion:
+      inputHandleMouseMove(evt.motion.x, evt.motion.y)
     else: discard
 
 proc deltaTime*(): float32 =

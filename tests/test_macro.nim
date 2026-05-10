@@ -3,14 +3,18 @@
 # ------------------------------------
 import gim
 
+var tex: Texture
+
 game "My first game!", 800, 600:
   scene "Scene 1":
+    onLoad:
+      tex = loadTexture("assets/test.png")
     onUpdate(dt):
       if input.isKeyPressed(keySpace):
         switchScene("Scene 2")
     onDraw:
       backend.clearScreen(0.1f, 0.1f, 0.1f, 1f)
-      renderer.drawRect(Vec2px(x: Pixels(100f), y: Pixels(100f)),Vec2px(x: Pixels(200f), y: Pixels(150f)),Red)
+      renderer.drawTexture(Vec2px(x: Pixels(100f), y: Pixels(100f)), tex)
 
   scene "Scene 2":
     onUpdate(dt):

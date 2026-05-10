@@ -4,7 +4,7 @@
 {.push raises: [].}
 
 import opengl
-import vec2, color, texture
+import vec2, color, texture, types
 
 type
   Shader* = object
@@ -182,7 +182,27 @@ func ortho(l, r, b, t: float32): array[16, float32] {.inline.} =
           0f,        0f,     -1f, 0f,
     -(r+l)/(r-l), -(t+b)/(t-b), 0f, 1f ]
 
+var gScreenWidth, gScreenHeight: int
+
+proc screenWidth*(): int {.inline.} = gScreenWidth
+proc screenHeight*(): int {.inline.} = gScreenHeight
+
+proc setProjection*(proj: array[16, float32]) {.inline.} =
+  gRect.proj = proj
+  gTex.proj = proj
+
+proc resetProjection*() {.inline.} =
+  let p = ortho(0f, float32(gScreenWidth), float32(gScreenHeight), 0f)
+  gRect.proj = p
+  gTex.proj = p
+
+func centered*(tex: Texture): Vec2px {.inline.} =
+  Vec2px(x: Pixels(float32(tex.width) / 2f),
+          y: Pixels(float32(tex.height) / 2f))
+
 proc initRenderer*(width, height: int) =
+  gScreenWidth = width
+  gScreenHeight = height
   gRect.shader = newShader(kRectVert, kRectFrag)
   gRect.mesh   = newQuadMesh()
   gRect.proj   = ortho(0f, float32(width), float32(height), 0f)
@@ -198,11 +218,13 @@ proc drawRect*(pos: Vec2px, size: Vec2px, color: Color) =
   gRect.shader.setUniform("uColor", color.r, color.g, color.b, color.a)
   gRect.mesh.draw()
 
-proc drawTexture*(pos: Vec2px, tex: var Texture) =
+proc drawTexture*(pos: Vec2px, tex: var Texture,
+                  origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f))) =
+  let drawPos = pos - origin
   gTex.shader.use()
   gTex.shader.setUniformMat4("uProjection", gTex.proj)
-  gTex.shader.setUniform("uPos",  float32(pos.x), float32(pos.y))
-  gTex.shader.setUniform("uSize", float32(tex.width), float32(tex.height))
+  gTex.shader.setUniform("uPos",  float32(drawPos.x), float32(drawPos.y))
+  gTex.shader.setUniform("uSize", float32(tex.width),  float32(tex.height))
   gTex.shader.setUniform("uTint", 1f, 1f, 1f, 1f)
   {.cast(raises: []).}:
     glActiveTexture(GL_TEXTURE0)

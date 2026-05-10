@@ -85,6 +85,19 @@ proc deltaTime*(): float32
 proc swapBuffers*()
 
 
+# ── camera.nim ──────────────────────────────────────────
+
+func camera*(target: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)), offset: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)), zoom: float32 = 1f, rotation: Radians = Radians(0f)): Camera {.inline.}
+
+func toProjection*(cam: Camera, w, h: int): array[16, float32] {.inline.}
+
+template withCamera*(cam: Camera, body: untyped)
+
+func screenToWorld*(screenPos: Vec2px, cam: Camera): Vec2px {.inline.}
+
+func worldToScreen*(worldPos: Vec2px, cam: Camera): Vec2px {.inline.}
+
+
 # ── color.nim ───────────────────────────────────────────
 
 Color* = object
@@ -201,11 +214,21 @@ proc newQuadMesh*(): Mesh
 
 proc draw*(m: Mesh) {.inline.}
 
+proc screenWidth*(): int {.inline.}
+
+proc screenHeight*(): int {.inline.}
+
+proc setProjection*(proj: array[16, float32]) {.inline.}
+
+proc resetProjection*() {.inline.}
+
+func centered*(tex: Texture): Vec2px {.inline.}
+
 proc initRenderer*(width, height: int)
 
 proc drawRect*(pos: Vec2px, size: Vec2px, color: Color)
 
-proc drawTexture*(pos: Vec2px, tex: var Texture)
+proc drawTexture*(pos: Vec2px, tex: var Texture, origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)))
 
 
 # ── scene.nim ───────────────────────────────────────────

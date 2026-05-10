@@ -205,6 +205,8 @@ proc initRenderer*(width, height: int)
 
 proc drawRect*(pos: Vec2px, size: Vec2px, color: Color)
 
+proc drawTexture*(pos: Vec2px, tex: var Texture)
+
 
 # ── scene.nim ───────────────────────────────────────────
 
@@ -227,6 +229,17 @@ func isPaused*(s: Scene): bool {.inline.}
 func isStopped*(s: Scene): bool {.inline.}
 
 func isTransitioning*(s: Scene): bool {.inline.}
+
+
+# ── texture.nim ─────────────────────────────────────────
+
+Texture* = object
+
+proc isValid*(t: var Texture): bool {.inline.}
+
+proc bindGL*(t: var Texture) {.inline.}
+
+proc loadTexture*(path: string): Texture
 
 
 # ── transform2.nim ──────────────────────────────────────

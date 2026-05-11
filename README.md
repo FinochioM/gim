@@ -2,8 +2,7 @@
 
 A 2D game library for Nim, where Nim's features are the foundation of every design decision.
 
-_You can use the `gim.doc.nim` file as a cheatsheet_ \
-_It might not be fully updated since the library is under development_ 
+_You can use the `gim.doc.nim` file as a cheatsheet_ 
 
 ## Basic example
 
@@ -31,6 +30,5 @@ game "My first game!", 800, 600:
 
 gim is built around Nim's macro system. `game` is a macro that expands into a window, game loop, and scene state machine at compile time.
 
-## Status
-
-Early development. API is subject to change. Backend is SDL2 + OpenGL 3.3.
+## Docs
+Currently the `gim.doc.nim` only has information for `backend.nim`. I will add comments on each file later on so the docs file can be used as a cheatsheet.

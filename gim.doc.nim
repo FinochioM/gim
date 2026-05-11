@@ -150,6 +150,8 @@ proc inputHandleMouseButton*(btn: uint8, down: bool)
 
 proc inputHandleMouseMove*(x, y: int32)
 
+proc inputHandleScroll*(delta: float32)
+
 proc isKeyDown*(k: Key): bool {.inline.}
 
 proc isKeyPressed*(k: Key): bool {.inline.}
@@ -163,6 +165,12 @@ proc isMousePressed*(btn: MouseButton): bool {.inline.}
 proc isMouseReleased*(btn: MouseButton): bool {.inline.}
 
 proc mousePos*(): tuple[x, y: int32] {.inline.}
+
+proc axis*(): Vec2[float32] {.inline.}
+
+proc scrollDelta*(): float32 {.inline.}
+
+proc mouseDelta*(): Vec2[float32] {.inline.}
 
 
 # ── rect2.nim ───────────────────────────────────────────
@@ -202,6 +210,8 @@ proc newShader*(vertSrc, fragSrc: string): Shader
 
 proc use*(s: Shader) {.inline.}
 
+proc setUniform*(s: Shader, name: cstring, v: float32)
+
 proc setUniform*(s: Shader, name: cstring, x, y: float32)
 
 proc setUniform*(s: Shader, name: cstring, r, g, b, a: float32)
@@ -222,13 +232,15 @@ proc setProjection*(proj: array[16, float32]) {.inline.}
 
 proc resetProjection*() {.inline.}
 
-func centered*(tex: Texture): Vec2px {.inline.}
-
 proc initRenderer*(width, height: int)
 
-proc drawRect*(pos: Vec2px, size: Vec2px, color: Color)
+proc drawRect*(pos: Vec2px, size: Vec2px, color: Color, origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)), rot: Radians = Radians(0f))
 
-proc drawTexture*(pos: Vec2px, tex: var Texture, origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)))
+func centered*(tex: Texture): Vec2px {.inline.}
+
+proc drawTexture*(pos: Vec2px, tex: var Texture, origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)), rot: Radians = Radians(0f), tint: Color = White)
+
+proc drawTextureSrc*(pos: Vec2px, tex: var Texture, src: Rect2px, origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)), rot: Radians = Radians(0f), tint: Color = White)
 
 
 # ── scene.nim ───────────────────────────────────────────
@@ -372,6 +384,14 @@ func length*[T: Scalar](a: Vec2[T]): float32 {.inline.}
 func normalize*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.}
 
 func neg*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.}
+
+func `-`*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.}
+
+func lerp*[T: Scalar](a, b: Vec2[T], t: float32): Vec2[T] {.inline.}
+
+func distanceSq*[T: Scalar](a, b: Vec2[T]): float32 {.inline.}
+
+func distance*[T: Scalar](a, b: Vec2[T]): float32 {.inline.}
 
 Vec2px* = Vec2[Pixels]
 

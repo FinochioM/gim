@@ -4,6 +4,7 @@
 {.push raises: [].}
 
 import sdl2
+import vec2
 
 type
   Key* = enum
@@ -20,11 +21,15 @@ type
     mbLeft, mbMiddle, mbRight
 
   InputState = object
-    keys:     array[Key, bool]   ## held this frame
-    keysPrev: array[Key, bool]   ## held last frame
-    mouse:    array[MouseButton, bool]
-    mousePrev: array[MouseButton, bool]
-    mouseX*, mouseY*: int32
+    keys:        array[Key, bool]
+    keysPrev:    array[Key, bool]
+    mouse:       array[MouseButton, bool]
+    mousePrev:   array[MouseButton, bool]
+    mouseX*:     int32
+    mouseY*:     int32
+    mousePrevX:  int32
+    mousePrevY:  int32
+    scrollDelta: float32
 
 var gInput: InputState
 
@@ -84,8 +89,11 @@ func toKey(sc: Scancode): Key {.inline.} =
   else: keyUnknown
 
 proc inputBeginFrame*() =
-  gInput.keysPrev   = gInput.keys
-  gInput.mousePrev  = gInput.mouse
+  gInput.keysPrev    = gInput.keys
+  gInput.mousePrev   = gInput.mouse
+  gInput.mousePrevX  = gInput.mouseX
+  gInput.mousePrevY  = gInput.mouseY
+  gInput.scrollDelta = 0f
 
 proc inputHandleKey*(sc: Scancode, down: bool) =
   let k = toKey(sc)
@@ -103,25 +111,33 @@ proc inputHandleMouseMove*(x, y: int32) =
   gInput.mouseX = x
   gInput.mouseY = y
 
-proc isKeyDown*(k: Key): bool {.inline.} =
-  gInput.keys[k]
+proc inputHandleScroll*(delta: float32) =
+  gInput.scrollDelta += delta
 
-proc isKeyPressed*(k: Key): bool {.inline.} =
-  gInput.keys[k] and not gInput.keysPrev[k]
+proc isKeyDown*(k: Key):      bool {.inline.} = gInput.keys[k]
+proc isKeyPressed*(k: Key):   bool {.inline.} = gInput.keys[k] and not gInput.keysPrev[k]
+proc isKeyReleased*(k: Key):  bool {.inline.} = not gInput.keys[k] and gInput.keysPrev[k]
 
-proc isKeyReleased*(k: Key): bool {.inline.} =
-  not gInput.keys[k] and gInput.keysPrev[k]
-
-proc isMouseDown*(btn: MouseButton): bool {.inline.} =
-  gInput.mouse[btn]
-
-proc isMousePressed*(btn: MouseButton): bool {.inline.} =
-  gInput.mouse[btn] and not gInput.mousePrev[btn]
-
-proc isMouseReleased*(btn: MouseButton): bool {.inline.} =
-  not gInput.mouse[btn] and gInput.mousePrev[btn]
+proc isMouseDown*(btn: MouseButton):     bool {.inline.} = gInput.mouse[btn]
+proc isMousePressed*(btn: MouseButton):  bool {.inline.} = gInput.mouse[btn] and not gInput.mousePrev[btn]
+proc isMouseReleased*(btn: MouseButton): bool {.inline.} = not gInput.mouse[btn] and gInput.mousePrev[btn]
 
 proc mousePos*(): tuple[x, y: int32] {.inline.} =
   (gInput.mouseX, gInput.mouseY)
+
+proc axis*(): Vec2[float32] {.inline.} =
+  var x, y: float32
+  if isKeyDown(keyD) or isKeyDown(keyRight): x += 1f
+  if isKeyDown(keyA) or isKeyDown(keyLeft):  x -= 1f
+  if isKeyDown(keyS) or isKeyDown(keyDown):  y += 1f
+  if isKeyDown(keyW) or isKeyDown(keyUp):    y -= 1f
+  let v = Vec2[float32](x: x, y: y)
+  if v.lengthSq > 0f: v.normalize else: v
+
+proc scrollDelta*(): float32 {.inline.} = gInput.scrollDelta
+
+proc mouseDelta*(): Vec2[float32] {.inline.} =
+  Vec2[float32](x: float32(gInput.mouseX - gInput.mousePrevX),
+                y: float32(gInput.mouseY - gInput.mousePrevY))
 
 {.pop.}

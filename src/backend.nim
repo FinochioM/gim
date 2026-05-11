@@ -151,6 +151,8 @@ proc pollEvents*() =
       inputHandleMouseButton(evt.button.button, false)
     of MouseMotion:
       inputHandleMouseMove(evt.motion.x, evt.motion.y)
+    of MouseWheel:
+      inputHandleScroll(float32(evt.wheel.y))
     else: discard
 
 ## This computes the time since the last call (in seconds)

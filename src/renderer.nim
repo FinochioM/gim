@@ -4,7 +4,7 @@
 {.push raises: [].}
 
 import opengl
-import vec2, color, texture, types
+import vec2, color, texture, rect2, types
 
 type
   Shader* = object
@@ -40,6 +40,10 @@ proc newShader*(vertSrc, fragSrc: string): Shader =
 proc use*(s: Shader) {.inline.} =
   {.cast(raises: []).}:
     glUseProgram(s.id)
+
+proc setUniform*(s: Shader, name: cstring, v: float32) =
+  {.cast(raises: []).}:
+    glUniform1f(glGetUniformLocation(s.id, name), v)
 
 proc setUniform*(s: Shader, name: cstring, x, y: float32) =
   {.cast(raises: []).}:
@@ -123,9 +127,15 @@ layout(location = 0) in vec2 aPos;
 uniform mat4 uProjection;
 uniform vec2 uPos;
 uniform vec2 uSize;
+uniform vec2 uOrigin;
+uniform float uRot;
 void main() {
-  vec2 world = aPos * uSize + uPos;
-  gl_Position = uProjection * vec4(world, 0.0, 1.0);
+  vec2 local = aPos * uSize - uOrigin;
+  float c = cos(uRot);
+  float s = sin(uRot);
+  vec2 rotated = vec2(c * local.x - s * local.y,
+                      s * local.x + c * local.y);
+  gl_Position = uProjection * vec4(rotated + uPos, 0.0, 1.0);
 }
 """
 
@@ -143,11 +153,20 @@ layout(location = 1) in vec2 aUV;
 uniform mat4 uProjection;
 uniform vec2 uPos;
 uniform vec2 uSize;
+uniform vec2 uOrigin;
+uniform float uRot;
+uniform vec2 uSrcPos;
+uniform vec2 uSrcSize;
+uniform vec2 uTexSize;
 out vec2 vUV;
 void main() {
-  vec2 world = aPos * uSize + uPos;
-  gl_Position = uProjection * vec4(world, 0.0, 1.0);
-  vUV = aUV;
+  vec2 local = aPos * uSize - uOrigin;
+  float c = cos(uRot);
+  float s = sin(uRot);
+  vec2 rotated = vec2(c * local.x - s * local.y,
+                      s * local.x + c * local.y);
+  gl_Position = uProjection * vec4(rotated + uPos, 0.0, 1.0);
+  vUV = (aUV * uSrcSize + uSrcPos) / uTexSize;
 }
 """
 
@@ -176,12 +195,6 @@ type
 
 var gTex: TexRenderer
 
-func ortho(l, r, b, t: float32): array[16, float32] {.inline.} =
-  [  2f/(r-l),       0f,      0f, 0f,
-          0f,  2f/(t-b),      0f, 0f,
-          0f,        0f,     -1f, 0f,
-    -(r+l)/(r-l), -(t+b)/(t-b), 0f, 1f ]
-
 var gScreenWidth, gScreenHeight: int
 
 proc screenWidth*(): int {.inline.} = gScreenWidth
@@ -191,14 +204,16 @@ proc setProjection*(proj: array[16, float32]) {.inline.} =
   gRect.proj = proj
   gTex.proj = proj
 
+func ortho(l, r, b, t: float32): array[16, float32] {.inline.} =
+  [  2f/(r-l),         0f,      0f, 0f,
+            0f,  2f/(t-b),      0f, 0f,
+            0f,         0f,    -1f, 0f,
+    -(r+l)/(r-l), -(t+b)/(t-b), 0f, 1f ]
+
 proc resetProjection*() {.inline.} =
   let p = ortho(0f, float32(gScreenWidth), float32(gScreenHeight), 0f)
   gRect.proj = p
   gTex.proj = p
-
-func centered*(tex: Texture): Vec2px {.inline.} =
-  Vec2px(x: Pixels(float32(tex.width) / 2f),
-          y: Pixels(float32(tex.height) / 2f))
 
 proc initRenderer*(width, height: int) =
   gScreenWidth = width
@@ -210,22 +225,57 @@ proc initRenderer*(width, height: int) =
   gTex.mesh    = newTexturedQuadMesh()
   gTex.proj    = ortho(0f, float32(width), float32(height), 0f)
 
-proc drawRect*(pos: Vec2px, size: Vec2px, color: Color) =
+proc drawRect*(pos: Vec2px, size: Vec2px, color: Color,
+  origin: Vec2px  = Vec2px(x: Pixels(0f), y: Pixels(0f)), rot: Radians = Radians(0f)) =
   gRect.shader.use()
   gRect.shader.setUniformMat4("uProjection", gRect.proj)
-  gRect.shader.setUniform("uPos",   float32(pos.x),  float32(pos.y))
-  gRect.shader.setUniform("uSize",  float32(size.x), float32(size.y))
+  gRect.shader.setUniform("uPos", float32(pos.x), float32(pos.y))
+  gRect.shader.setUniform("uSize", float32(size.x), float32(size.y))
+  gRect.shader.setUniform("uOrigin", float32(origin.x), float32(origin.y))
+  gRect.shader.setUniform("uRot", float32(rot))
   gRect.shader.setUniform("uColor", color.r, color.g, color.b, color.a)
   gRect.mesh.draw()
 
+func centered*(tex: Texture): Vec2px {.inline.} =
+  Vec2px(x: Pixels(float32(tex.width) / 2f), y: Pixels(float32(tex.height) / 2f))
+
 proc drawTexture*(pos: Vec2px, tex: var Texture,
-                  origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f))) =
-  let drawPos = pos - origin
+  origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)),
+  rot: Radians = Radians(0f),
+  tint: Color   = White) =
+  let tw = float32(tex.width)
+  let th = float32(tex.height)
   gTex.shader.use()
   gTex.shader.setUniformMat4("uProjection", gTex.proj)
-  gTex.shader.setUniform("uPos",  float32(drawPos.x), float32(drawPos.y))
-  gTex.shader.setUniform("uSize", float32(tex.width),  float32(tex.height))
-  gTex.shader.setUniform("uTint", 1f, 1f, 1f, 1f)
+  gTex.shader.setUniform("uPos", float32(pos.x), float32(pos.y))
+  gTex.shader.setUniform("uSize", tw, th)
+  gTex.shader.setUniform("uOrigin", float32(origin.x), float32(origin.y))
+  gTex.shader.setUniform("uRot", float32(rot))
+  gTex.shader.setUniform("uSrcPos",  0f, 0f)
+  gTex.shader.setUniform("uSrcSize", tw, th)
+  gTex.shader.setUniform("uTexSize", tw, th)
+  gTex.shader.setUniform("uTint", tint.r, tint.g, tint.b, tint.a)
+  {.cast(raises: []).}:
+    glActiveTexture(GL_TEXTURE0)
+  tex.bindGL()
+  gTex.mesh.draw()
+
+proc drawTextureSrc*(pos: Vec2px, tex: var Texture, src: Rect2px,
+  origin: Vec2px = Vec2px(x: Pixels(0f), y: Pixels(0f)),
+  rot: Radians = Radians(0f),
+  tint: Color = White) =
+  let tw = float32(tex.width)
+  let th = float32(tex.height)
+  gTex.shader.use()
+  gTex.shader.setUniformMat4("uProjection", gTex.proj)
+  gTex.shader.setUniform("uPos", float32(pos.x), float32(pos.y))
+  gTex.shader.setUniform("uSize", float32(src.size.x), float32(src.size.y))
+  gTex.shader.setUniform("uOrigin", float32(origin.x), float32(origin.y))
+  gTex.shader.setUniform("uRot", float32(rot))
+  gTex.shader.setUniform("uSrcPos", float32(src.pos.x), float32(src.pos.y))
+  gTex.shader.setUniform("uSrcSize", float32(src.size.x), float32(src.size.y))
+  gTex.shader.setUniform("uTexSize", tw, th)
+  gTex.shader.setUniform("uTint", tint.r, tint.g, tint.b, tint.a)
   {.cast(raises: []).}:
     glActiveTexture(GL_TEXTURE0)
   tex.bindGL()

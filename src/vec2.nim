@@ -46,6 +46,19 @@ func normalize*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.} =
 func neg*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.} =
   Vec2[T](x: T(-float32(a.x)), y: T(-float32(a.y)))
 
+func `-`*[T: Scalar](a: Vec2[T]): Vec2[T] {.inline.} =
+  Vec2[T](x: T(-float32(a.x)), y: T(-float32(a.y)))
+
+func lerp*[T: Scalar](a, b: Vec2[T], t: float32): Vec2[T] {.inline.} =
+  Vec2[T](x: T(float32(a.x) + (float32(b.x) - float32(a.x)) * t),
+          y: T(float32(a.y) + (float32(b.y) - float32(a.y)) * t))
+
+func distanceSq*[T: Scalar](a, b: Vec2[T]): float32 {.inline.} =
+  (a - b).lengthSq
+
+func distance*[T: Scalar](a, b: Vec2[T]): float32 {.inline.} =
+  (a - b).length
+
 type
   Vec2px* = Vec2[Pixels]
   Vec2w*  = Vec2[WorldUnits]
